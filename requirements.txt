@@ -1,0 +1,27 @@
+
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.1
+pydantic>=2.8.2
+
+# LangChain + ecosystem
+langchain>=0.2.14
+langchain-community>=0.2.12
+langchain-openai>=0.1.22
+openai>=1.40.0
+tiktoken>=0.7.0
+chromadb>=0.5.3
+
+# Streamlit UI
+streamlit>=1.37.0
+
+# Evals
+ragas>=0.1.16
+pandas>=2.2.2
+numpy>=1.26.4
+scikit-learn>=1.4.2
+
+# Web crawling loaders
+beautifulsoup4>=4.12.2
+aiohttp>=3.9.3
+requests>=2.31.0
