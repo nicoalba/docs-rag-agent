@@ -1,23 +1,46 @@
-
-version: "3.9"
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # (no healthcheck needed)
+
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      # Point API at Ollama and select models (free, local)
+      OLLAMA_BASE_URL: http://ollama:11434
+      GENERATIVE_MODEL: llama3.1:8b
+      EMBEDDING_MODEL: nomic-embed-text
+    volumes:
+      - ./data/db:/app/data/db
+      - ./data/docs:/app/data/docs
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    depends_on:
+      - ollama
     ports:
       - "8000:8000"
-    volumes:
-      - ./data:/app/data
+
   ui:
     build:
       context: .
       dockerfile: Dockerfile.ui
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      API_URL: http://api:8000
+    command: streamlit run ui/app.py --server.port 8501 --server.address 0.0.0.0
     depends_on:
       - api
     ports:
       - "8501:8501"
-    volumes:
-      - ./data:/app/data
+
+volumes:
+  ollama: {}

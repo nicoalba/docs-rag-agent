@@ -1,6 +1,7 @@
 
 import os
 from langchain_openai import OpenAIEmbeddings
+import os
 from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -19,6 +20,16 @@ def main():
     chunks = splitter.split_documents(docs)
 
     embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model=EMBEDDING_MODEL)
+    # Choose embeddings provider at runtime
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "").rstrip("/")
+    if OLLAMA_BASE_URL:
+        # Local/free path via Ollama
+        from langchain_community.embeddings import OllamaEmbeddings
+        embeddings = OllamaEmbeddings(model=EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL)
+    else:
+        # Cloud path via OpenAI
+        from langchain_openai import OpenAIEmbeddings
+        embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL, api_key=OPENAI_API_KEY)
 
     Chroma.from_documents(chunks, embedding=embeddings, persist_directory=PERSIST_DIR)
     print(f"Ingested {len(chunks)} chunks into {PERSIST_DIR}")
