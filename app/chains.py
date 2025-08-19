@@ -42,6 +42,13 @@ def build_qa_chain():
     if OLLAMA_BASE_URL:
         from langchain_community.chat_models import ChatOllama
         llm = ChatOllama(model=LLM_MODEL, base_url=OLLAMA_BASE_URL, temperature=0.1)
+        from langchain_community.chat_models import ChatOllama
+        llm = ChatOllama(
+            model=LLM_MODEL,
+            base_url=OLLAMA_BASE_URL,
+            temperature=0.1,
+            model_kwargs={"num_predict": 256, "num_ctx": 2048}  # cap output + smaller context
+        )
     else:
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(model=LLM_MODEL, temperature=0.1, api_key=OPENAI_API_KEY)
