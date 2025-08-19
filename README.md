@@ -7,7 +7,7 @@ A small RAG app that answers questions about QuickNode Streams with citations. T
 - FastAPI (back-end API)
 - LangChain + Chroma (vector store)
 - Streamlit (UI)
-- Docker Compose for deployment
+- Docker Compose (deployment)
 
 ## Quickstart: Run with Docker Compose
 
