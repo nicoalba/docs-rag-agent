@@ -1,151 +1,223 @@
+# Docs Q&A RAG — QuickNode Streams (WIP)
 
-# Docs Q&A RAG (Blockchain-flavored) + Evals
+A small, portfolio-ready RAG app that answers questions about **QuickNode Streams** with citations.
 
-**One polished, portfolio-ready project**: a small RAG app that answers questions about a local set of blockchain docs
-(e.g., Solana/Anchor or EVM topics) with citations, plus **objective evals** (RAGAS) and **cost/risks** notes.
+**Stack:** FastAPI (API), LangChain + **Chroma** (vector store), Streamlit (UI).  
+**Status:** UI deployed on Render; retrieval runs from a persistent Chroma DB (`data/db`).
 
-> Stack: FastAPI (backend), LangChain + Chroma (RAG), OpenAI (LLM/embeddings by default), Streamlit (UI), RAGAS (evals).
+---
 
-![screenshot](docs/screenshot-placeholder.png)
+## Live Demo
+- **UI:** https://docs-rag-agent.onrender.com
+- **API:** (add your API URL here when deployed)
+
+> The UI reads the API base from the `API_URL` environment variable.
+
+---
 
 ## TL;DR
-- **Run locally** with Docker Compose or directly via Python.
-- **Ask questions** in the Streamlit UI; see **source citations**.
-- **Evaluate** your RAG quality with **RAGAS** on a small handcrafted dataset.
-- Swap in Bedrock or other LLMs by editing `config.py`.
+- **Local dev:** Docker Compose *or* Python venv.
+- **Docs source:** QuickNode Streams pages crawled and embedded directly into **Chroma** at `data/db/`.
+- **`data/docs/` can be empty.** It’s only used if you choose to ingest local Markdown.
+- **UI on Render:** built with `dockerfile.ui`. Set `API_URL` to point at your public API.
 
-## Quickstart
-
-### 1) Set environment
-Copy `.env.example` to `.env` and fill in your keys.
-```bash
-cp .env.example .env
-# Edit .env and set OPENAI_API_KEY=...
-```
-
-### 2) (Option A) Run with Docker Compose
-```bash
-docker compose up --build
-# UI -> http://localhost:8501
-# API -> http://localhost:8000/docs
-```
-
-### 2) (Option B) Run locally with Python
-```bash
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-# 1) Ingest docs into Chroma
-python ingest/ingest.py
-
-# 2) Start API
-uvicorn app.main:app --reload --port 8000
-
-# 3) In another terminal, start UI
-streamlit run ui/app.py --server.port 8501
-```
-
-### 3) Ask questions
-Open the Streamlit UI (`http://localhost:8501`), type a question like:
-- *“What is an Anchor program account and how is it initialized?”*
-- *“What’s the difference between PDAs and EVM contract addresses?”*
-
-### 4) Run evals (RAGAS)
-```bash
-python evals/run_evals.py  # writes a report to evals/out/metrics.md
-```
-
-## Architecture
-
-```mermaid
-flowchart LR
-  A[Docs (Markdown/HTML/PDF)] -->|Ingest & Chunk| B[Chroma Vector Store]
-  B --> C[Retriever]
-  C --> D[LangChain RAG Chain]
-  E[User Question] --> D
-  D -->|Answer + Citations| F[FastAPI /ask]
-  F --> G[Streamlit UI]
-  D --> H[Eval Harness (RAGAS)]
-```
-
-**Key pieces**
-- **Ingest** (`ingest/ingest.py`): loads markdowns from `data/docs/`, chunks, embeds, and stores in **Chroma**.
-- **API** (`app/main.py`): `/ask` returns an answer **with citations (source URLs/paths)**.
-- **UI** (`ui/app.py`): minimalist Streamlit client with an input box and pretty citation rendering.
-- **Evals** (`evals/run_evals.py`): evaluates faithfulness, answer relevancy, and context precision/recall on a small set.
-
-## Evals & Results (example targets)
-- **Faithfulness ≥ 0.75**, **Answer Relevancy ≥ 0.75** on `evals/dataset.jsonl`
-- P50 latency ≤ 2.5s on laptop; **cost** ≤ $0.50 / 100 queries (documented in `docs/costs.md`)
-
-> Edit the thresholds to match your hardware/model choice; include failures + planned fixes in `docs/limitations.md`.
-
-## Security & Risk
-- Limited to a **local, curated corpus** (no external browsing).
-- Basic **prompt-injection** warning for suspicious inputs (see `app/guards.py`).
-- No PII ingestion by default.
-
-## Costs
-- With `gpt-4o-mini` + `text-embedding-3-small`, a lightweight corpus typically costs **cents** per 100 queries.
-- See `docs/costs.md` for the simple per-query math you can adapt to any model.
+---
 
 ## Project Layout
 ```
-docs-rag-qa/
+docs-rag-agent/
 ├─ app/
-│  ├─ main.py
-│  ├─ chains.py
+│  ├─ main.py            # FastAPI app with /ask
+│  ├─ chains.py          # embeddings, vectorstore, RAG chain
 │  ├─ config.py
-│  ├─ guards.py
 │  └─ __init__.py
 ├─ ui/
-│  └─ app.py
+│  └─ app.py             # Streamlit client (reads API_URL env var)
 ├─ ingest/
-│  └─ ingest.py
-├─ evals/
-│  ├─ dataset.jsonl
-│  ├─ run_evals.py
-│  └─ out/  (generated)
+│  ├─ web_ingest_quicknode_streams.py  # crawler → Chroma
+│  └─ (optional) ingest_md.py          # local .md → Chroma
 ├─ data/
-│  ├─ docs/  (markdown seed corpus)
-│  └─ db/    (Chroma index, generated)
-├─ tests/
-│  └─ test_smoke.py
-├─ docs/
-│  ├─ costs.md
-│  ├─ limitations.md
-│  └─ screenshot-placeholder.png
-├─ .env.example
-├─ requirements.txt
+│  ├─ docs/              # optional; can be empty (keep the folder present)
+│  └─ db/                # Chroma DB (persisted)
 ├─ docker-compose.yml
-├─ Dockerfile.api
-├─ Dockerfile.ui
-├─ LICENSE
-└─ CODE_OF_CONDUCT.md
+├─ dockerfile.api        # API container
+├─ dockerfile.ui         # UI container (Streamlit)
+├─ requirements.txt
+└─ .env.example
 ```
 
-## Limitations & Future Work
-- This is a **local demo**; production needs auth, monitoring, rate limiting, tracing, and better evals.
-- Add re-ranking (e.g., Cohere/ColBERT), caching, and more robust injection defenses.
-- Swap Chroma for **pgvector** for a “production-ish” Postgres path.
+---
+
+## Running Locally
+
+### Option A — Docker Compose
+```bash
+docker compose up --build
+# UI:  http://localhost:8501
+# API: http://localhost:8000/docs
+```
+
+### Option B — Python (venv)
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start API (port 8000)
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# In another terminal, start UI (port 8501)
+streamlit run ui/app.py --server.address 0.0.0.0 --server.port 8501
+```
+
+> If port 8000 is already in use (e.g., Docker running), use `--port 8001` and set `API_URL=http://localhost:8001` before starting the UI:
+> ```bash
+> export API_URL=http://localhost:8001
+> streamlit run ui/app.py --server.port 8501
+> ```
 
 ---
 
-MIT Licensed. Created as a quick-start portfolio project.
+## Ingesting Docs (QuickNode Streams)
 
----
-
-## Ingest a Single Section from a Live Docs Site (QuickNode Streams)
-
-You can index only the **Streams** section from QuickNode docs:
+The crawler fetches only the Streams section and writes **straight into Chroma** (`data/db`).
 
 ```bash
-# Install deps first (see requirements.txt)
+# Example: run the crawler
 python ingest/web_ingest_quicknode_streams.py
-# This writes chunks to data/db and preserves original URLs for citations.
+
+# Optional sanity check for your Chroma DB
+python - <<'PY'
+persist_dir="data/db"
+import chromadb
+try:
+    client = chromadb.PersistentClient(path=persist_dir)  # chroma >= 0.5
+except TypeError:
+    from chromadb.config import Settings
+    client = chromadb.Client(Settings(chroma_db_impl="duckdb+parquet", persist_directory=persist_dir))
+
+print("Collections:", [c.name for c in client.list_collections()])
+coll = client.get_collection(name="docs")  # adjust if you used a different name
+print("Count:", coll.count())
+sample = coll.get(limit=3, include=["documents","metadatas","ids"])
+for i,(doc,meta,_id) in enumerate(zip(sample["documents"], sample["metadatas"], sample["ids"]),1):
+    print(f"--- sample {i} ---")
+    print("source:", (meta or {}).get("source"))
+    print((doc or "")[:200], "…")
+PY
 ```
 
-**Scope control:** The script starts at
-`https://www.quicknode.com/docs/streams/getting-started` and keeps only pages
-whose URL begins with `https://www.quicknode.com/docs/streams/` to avoid the rest
-of the docs. Keep the crawl small while you iterate.
+**Notes**
+- You’ll see `chroma.sqlite3` and several `.bin` files under `data/db/` — that’s normal (Chroma index + catalog).
+- Keep `data/docs/` **present but empty** unless you want to ingest local Markdown.
+
+---
+
+## Deploying the **UI Only** on Render
+
+You already have a UI-only Dockerfile: **`dockerfile.ui`** (Streamlit on port 8501).
+
+1. **Render → New → Web Service**  
+2. Connect this repo → **Environment: Docker**  
+3. **Dockerfile path:** `dockerfile.ui`  
+4. **Port:** `8501`  
+5. **Environment Variable:**  
+   - `API_URL` = `https://<your-api-service>.onrender.com` (full HTTPS URL, no trailing slash)  
+6. **Create Web Service** and wait for it to build.  
+7. Visit the Render URL and ask a question.
+
+> **Updating UI text?** Commit & push changes, then in Render: **Manual Deploy → Clear build cache & deploy**, and hard-refresh the page (Ctrl/Cmd+Shift+R).
+
+### Adjusting an env var on an existing Render service
+- Open your UI service → left sidebar **Environment** → add/edit `API_URL` → **Save** → **Manual Deploy → Clear build cache & deploy**.
+
+---
+
+## Deploying the API (Optional, for a full public demo)
+
+Use **`dockerfile.api`** (FastAPI on port 8000). **Important:** current code references **Ollama** (`ChatOllama`, `OllamaEmbeddings`). Render does not run an Ollama server by default.
+
+Two ways forward:
+1. **Switch to a hosted LLM** (easiest):
+   - Update `app/chains.py` to use `langchain_openai` (or Together/Groq).
+   - Set the relevant API key(s) via env vars.
+2. **Host an Ollama-compatible endpoint** elsewhere and point your API to it via env.
+
+After the API is live, set the UI’s `API_URL` to the API’s Render URL and redeploy the UI.
+
+Add CORS in FastAPI so the UI can reach it:
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://<your-ui>.onrender.com"],  # your Render UI URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+---
+
+## Configuration
+
+- **UI**
+  - `API_URL` — where the Streamlit UI sends requests.  
+    - Local default: `http://localhost:8000`  
+    - On Render: set to your API’s public URL (`https://<api>.onrender.com`)
+
+- **API**
+  - `CHROMA_DIR` — path to Chroma’s persistent store (default: `data/db`).  
+  - `CHROMA_COLLECTION` — collection name (default: `docs`).
+
+---
+
+## Common Troubleshooting
+
+- **UI shows old text on Render**  
+  You didn’t redeploy from the latest commit. Push changes → **Manual Deploy → Clear build cache & deploy** → hard refresh.
+
+- **`NameResolutionError: 'docs-rag'` in the UI**  
+  `API_URL` is wrong (e.g., pointing to a docker-compose hostname). Use a full public URL with scheme, like `https://<api>.onrender.com`.
+
+- **`HTTPConnectionPool(host='api', port=8000)` / timeouts**  
+  API container isn’t reachable. Check `docker compose logs -f api`. Ensure `ports: - "8000:8000"` is set and the server binds `0.0.0.0`.
+
+- **Deleting `data/docs` breaks the app**  
+  Your compose or code expects the path. Keep an empty folder:
+  ```bash
+  mkdir -p data/docs && touch data/docs/.gitkeep
+  ```
+  Or remove the mount and guard any `DirectoryLoader` usage.
+
+- **Uvicorn: “address already in use”**  
+  Another process (often Docker) is on port 8000. Use `--port 8001` locally or stop the container.
+
+- **LangChain deprecation warnings**  
+  Consider migrating to:
+  ```python
+  from langchain_chroma import Chroma
+  from langchain_ollama import ChatOllama, OllamaEmbeddings
+  ```
+  and update `requirements.txt` accordingly.
+
+---
+
+## Understanding `data/db/` (Chroma)
+
+- `chroma.sqlite3` — catalog of collections and records (metadata).  
+- index shards / `.bin` files — ANN index storing your embeddings.  
+- Retrieval queries by similarity and returns chunks + `source` metadata for citations.
+
+---
+
+## Future Work
+- Swap Ollama for a hosted LLM to make API cloud-friendly.
+- Add a tiny `/health` route and request tracing.
+- Optional: export Chroma docs to Markdown for auditability.
+- Add RAG evals (RAGAS) on a small Q/A set for Streams.
+- Re-ranking (Cohere/ColBERT), caching, stronger injection defenses.
+
+---
+
+MIT Licensed. Built for portfolio use.
