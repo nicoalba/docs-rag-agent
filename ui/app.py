@@ -7,9 +7,9 @@ API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Docs Q&A RAG", layout="wide")
 st.title("Docs Q&A RAG")
-st.write("Ask questions about the local blockchain docs corpus and get answers with citations.")
+st.write("Ask questions about QuickNode Streams documentation and get answers with citations.")
 
-q = st.text_input("Your question", placeholder="What is a PDA in Solana and how is it derived?")
+q = st.text_input("Your question", placeholder="What is a Solana Stake Program Filter")
 
 if st.button("Ask") and q:
     try:
