@@ -42,7 +42,7 @@ docker compose down
 
 ## Screenshot
 
-[Docs RAG agent screenshot](images/docs-rag-screenshot.PNG)
+![Docs RAG agent screenshot](images/docs-rag-screenshot.PNG)
 
 ## Ingest/update docs
 
