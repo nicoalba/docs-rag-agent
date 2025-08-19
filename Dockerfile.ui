@@ -8,7 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ui ./ui
 COPY app ./app
-COPY data ./data
 COPY .env.example ./.env.example
 
 EXPOSE 8501
