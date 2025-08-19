@@ -1,4 +1,4 @@
-# Docs Q&A RAG — QuickNode Streams
+# Docs Q&A RAG chatbot
 
 A small RAG app that answers questions about QuickNode Streams with citations. The content was crawled and ingested from [QuickNode docs](https://www.quicknode.com/docs/streams/getting-started) using a Python script.
 
