@@ -1,6 +1,3 @@
-
-from typing import List
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from typing import List
 import os
 from langchain_community.vectorstores import Chroma
@@ -15,7 +12,6 @@ from .config import (
 )
 
 def get_retriever():
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model=EMBEDDING_MODEL)
     # Choose embeddings provider to MATCH ingest
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "").rstrip("/")
     if OLLAMA_BASE_URL:
@@ -41,7 +37,6 @@ def format_docs(docs: List[Document]) -> str:
 
 def build_qa_chain():
     retriever = get_retriever()
-    llm = ChatOpenAI(model=LLM_MODEL, temperature=0.1, openai_api_key=OPENAI_API_KEY)
     # Choose chat model provider (Ollama if available, else OpenAI)
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "").rstrip("/")
     if OLLAMA_BASE_URL:

@@ -13,7 +13,7 @@ q = st.text_input("Your question", placeholder="What is a PDA in Solana and how 
 
 if st.button("Ask") and q:
     try:
-        resp = requests.post(f"{API_URL}/ask", json={"question": q}, timeout=60)
+        resp = requests.post(f"{API_URL}/ask", json={"question": q}, timeout=180)
         if resp.status_code == 200:
             st.markdown("### Answer")
             st.write(resp.json()["answer"])
