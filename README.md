@@ -77,3 +77,28 @@ docs-rag-agent/
 ├─ requirements.txt
 └─ .env.example
 ```
+
+## Rerun 
+
+Once the chatbot is built, use these cmds to bring it back up:
+
+- *If you only clicked Stop (didn’t Delete) in Docker Desktop*:
+  Just hit Play on the rag-chatbot stack. (CLI equivalent: `docker compose start`.)
+
+- *If you changed code or Dockerfiles*:
+  Use rebuild: `docker compose up -d --build`.
+
+- *If you edited `.env` or `docker-compose.yml`*:
+  Recreate so changes take effect: `docker compose up -d` (add `--force-recreate` if needed).
+
+- *If you deleted containers (or ran down)*:
+  Recreate them: `docker compose up -d` (add `--build` if code changed).
+
+## Demo checks
+
+Run `docker compose exec ollama ollama list`. If your model isn't listed, pull it:
+
+```bash
+docker compose exec ollama ollama pull nomic-embed-text
+docker compose exec ollama ollama pull llama3.1:8b
+```

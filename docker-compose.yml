@@ -1,3 +1,5 @@
+name: rag-chatbot
+
 services:
   ollama:
     image: ollama/ollama:latest
