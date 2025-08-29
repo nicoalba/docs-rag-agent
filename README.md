@@ -75,7 +75,7 @@ docs-rag-agent/
 ├─ dockerfile.api        # API container
 ├─ dockerfile.ui         # UI container (Streamlit)
 ├─ requirements.txt
-└─ .env.example
+└─ .env
 ```
 
 ## Rerun 
